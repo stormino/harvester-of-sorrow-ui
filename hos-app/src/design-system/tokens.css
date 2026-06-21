@@ -1,0 +1,128 @@
+/* ─────────────────────────────────────────────
+   Harvester of Sorrow (HOS) Design System v1.0.0
+   Color Tokens — "Ride the Lightning" (dark) & "…And Justice for All" (light)
+   ───────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* ── Dark theme (default) — Ride the Lightning ── */
+:root,
+[data-theme="dark"] {
+  --bg:            #16171f;
+  --surface:       #1E1F28;
+  --surface-2:     #222433;
+  --elevated:      #272a40;
+  --border:        #2a2e60;
+  --border-strong: #303E84;
+  --text:          #D6E1EE;
+  --text-muted:    #8aa4c0;
+  --text-dim:      #4a6a90;
+  --brand:         #4A7EBC;
+  --vixsrc:        #4A7EBC;
+  --raiplay:       #3a90b8;
+  --success:       #3fb950;
+  --error:         #f15f53;
+  --warning:       #f0a92c;
+  --amber:         #d4a832;
+  --type-movie:    #4A7EBC;
+  --type-tv:       #c460a0;
+
+  /* Typography */
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Fira Code', monospace;
+  --text-xs:   10px;
+  --text-sm:   11px;
+  --text-base: 13px;
+  --text-ui:   14px;
+  --text-md:   15px;
+  --text-lg:   17px;
+  --text-xl:   22px;
+  --text-2xl:  28px;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --leading-tight:   1.2;
+  --leading-normal:  1.5;
+  --tracking-tight:  -0.02em;
+  --tracking-wide:   0.06em;
+  --tracking-caps:   0.08em;
+
+  /* Spacing */
+  --gap-xs: 4px;
+  --gap-sm: 6px;
+  --gap-md: 9px;
+  --gap-lg: 14px;
+  --gap-xl: 22px;
+
+  /* Border radius */
+  --radius-sm:   4px;
+  --radius-md:   7px;
+  --radius-nav:  8px;
+  --radius-card: 9px;
+  --radius-lg:  12px;
+  --radius-xl:  16px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.25);
+  --shadow-md:  0 4px 12px rgba(0,0,0,.35);
+  --shadow-lg:  0 12px 32px rgba(0,0,0,.45);
+  --shadow-pop: 0 2px 8px rgba(0,0,0,.30), 0 0 0 1px rgba(255,255,255,.04);
+
+  /* Layout */
+  --sidebar-width: 234px;
+  --navbar-height:  56px;
+  --tabbar-height:  52px;
+
+  /* Animation durations */
+  --duration-fast: 100ms;
+  --duration-base: 150ms;
+  --duration-slow: 300ms;
+}
+
+/* ── Light theme — …And Justice for All ── */
+[data-theme="light"] {
+  --bg:            #EFF6F6;
+  --surface:       #FAFEFE;
+  --surface-2:     #E6E2D4;
+  --elevated:      #FFFFFF;
+  --border:        #D4CCBA;
+  --border-strong: #93ADB2;
+  --text:          #434A47;
+  --text-muted:    #6a7e80;
+  --text-dim:      #93ADB2;
+  --brand:         #8a7018;
+  --vixsrc:        #434A47;
+  --raiplay:       #5a7a80;
+  --success:       #2d7a35;
+  --error:         #c42c28;
+  --warning:       #b06010;
+  --amber:         #BDAA57;
+  --type-movie:    #434A47;
+  --type-tv:       #885080;
+}
+
+/* ── Keyframes ── */
+@keyframes hos-indet {
+  0%   { left: -38%; }
+  100% { left: 100%; }
+}
+@keyframes hos-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes hos-toast {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes hos-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .45; }
+}
+@keyframes hos-pop {
+  from { opacity: 0; transform: translateY(6px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes hos-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
