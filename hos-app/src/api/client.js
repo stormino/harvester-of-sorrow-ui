@@ -14,13 +14,13 @@ async function request(method, path, params, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`${method} ${path} → ${res.status}: ${text}`);
+    const errText = await res.text().catch(() => '');
+    throw new Error(`${method} ${path} → ${res.status}: ${errText}`);
   }
   if (res.status === 204) return null;
-  const ct = res.headers.get('content-type') || '';
-  if (ct.includes('application/json')) return res.json();
-  return null;
+  const text = await res.text();
+  if (!text) return null;
+  try { return JSON.parse(text); } catch { return null; }
 }
 
 // ── Search ──────────────────────────────────────────────────────────────────
