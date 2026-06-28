@@ -1,113 +1,71 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { listDownloads, cancelDownload, retryDownload } from '../api/client.js';
 
-const POLL_MS = 3000;
-
 export function useDownloads() {
-  const [tasks, setTasks]           = useState([]);
-  const [connected, setConnected]   = useState(false);
-  const [loading, setLoading]       = useState(true);
+  const [tasks, setTasks]         = useState([]);
+  const [connected, setConnected] = useState(false);
+  const [loading, setLoading]     = useState(true);
   const esRef = useRef(null);
 
-  // Initial load
   const fetchAll = useCallback(async () => {
     try {
       const data = await listDownloads();
       setTasks(data ?? []);
     } catch {
-      // backend unreachable — tasks stay as-is
+      // ignore — SSE keeps state up to date
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Merge a single SSE progress update into the task list
   const applyUpdate = useCallback((update) => {
     setTasks(prev => prev.map(t => {
       if (t.id !== update.taskId) return t;
       const updated = {
         ...t,
-        status:                update.status        ?? t.status,
-        aggregatedProgress:    update.progress      ?? t.aggregatedProgress,
+        status:                  update.status        ?? t.status,
+        aggregatedProgress:      update.progress      ?? t.aggregatedProgress,
         aggregatedDownloadSpeed: update.downloadSpeed ?? t.aggregatedDownloadSpeed,
-        aggregatedEtaSeconds:  update.etaSeconds    ?? t.aggregatedEtaSeconds,
-        errorMessage:          update.errorMessage  ?? t.errorMessage,
+        aggregatedEtaSeconds:    update.etaSeconds    ?? t.aggregatedEtaSeconds,
+        errorMessage:            update.errorMessage  ?? t.errorMessage,
       };
-      // If it's a sub-task update, merge into subTasks too
       if (update.subTaskId && t.subTasks) {
         updated.subTasks = t.subTasks.map(st =>
           st.id === update.subTaskId
             ? { ...st,
-                status:        update.status       ?? st.status,
-                progress:      update.progress     ?? st.progress,
+                status:        update.status        ?? st.status,
+                progress:      update.progress      ?? st.progress,
                 downloadSpeed: update.downloadSpeed ?? st.downloadSpeed,
-                etaSeconds:    update.etaSeconds   ?? st.etaSeconds,
+                etaSeconds:    update.etaSeconds    ?? st.etaSeconds,
               }
             : st
         );
       }
       return updated;
     }));
+  }, []);
 
-    // On terminal states, do a full refresh to get accurate final data
-    if (['COMPLETED','FAILED','CANCELLED','NOT_FOUND'].includes(update.status)) {
-      setTimeout(fetchAll, 500);
-    }
-  }, [fetchAll]);
-
-  // SSE connection
   useEffect(() => {
+    // One-time load for initial task list, then SSE takes over
     fetchAll();
 
-    let es;
-    let pollTimer;
-    let reconnectTimer;
+    const es = new EventSource('/api/progress/stream');
+    esRef.current = es;
 
-    const connect = () => {
-      es = new EventSource('/api/progress/stream');
-      esRef.current = es;
+    es.onopen    = () => setConnected(true);
+    es.onmessage = (e) => { try { applyUpdate(JSON.parse(e.data)); } catch {} };
+    es.onerror   = () => setConnected(false);
 
-      es.onopen = () => {
-        setConnected(true);
-        clearInterval(pollTimer);
-        pollTimer = null;
-      };
-
-      es.onmessage = (e) => {
-        try { applyUpdate(JSON.parse(e.data)); } catch {}
-      };
-
-      es.onerror = () => {
-        setConnected(false);
-        es.close();
-        // Only start polling if not already polling
-        if (!pollTimer) {
-          pollTimer = setInterval(fetchAll, POLL_MS);
-        }
-        // Try to reconnect SSE after 5s (clear any pending reconnect first)
-        clearTimeout(reconnectTimer);
-        reconnectTimer = setTimeout(connect, 5000);
-      };
-    };
-
-    connect();
-
-    return () => {
-      es?.close();
-      clearInterval(pollTimer);
-      clearTimeout(reconnectTimer);
-    };
+    return () => es.close();
   }, [fetchAll, applyUpdate]);
 
   const cancel = useCallback(async (id) => {
     await cancelDownload(id);
-    fetchAll();
-  }, [fetchAll]);
+  }, []);
 
   const retry = useCallback(async (id) => {
     await retryDownload(id);
-    fetchAll();
-  }, [fetchAll]);
+  }, []);
 
   const toggleExpanded = useCallback((id) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, _expanded: !t._expanded } : t));
@@ -115,13 +73,11 @@ export function useDownloads() {
 
   const clearCompleted = useCallback(async () => {
     const completed = tasks.filter(t =>
-      ['COMPLETED','CANCELLED','NOT_FOUND'].includes(t.status)
+      ['COMPLETED', 'CANCELLED', 'NOT_FOUND'].includes(t.status)
     );
     await Promise.allSettled(completed.map(t => cancelDownload(t.id)));
-    fetchAll();
-  }, [tasks, fetchAll]);
+    setTasks(prev => prev.filter(t => !['COMPLETED', 'CANCELLED', 'NOT_FOUND'].includes(t.status)));
+  }, [tasks]);
 
-  const refresh = fetchAll;
-
-  return { tasks, connected, loading, cancel, retry, toggleExpanded, clearCompleted, refresh };
+  return { tasks, connected, loading, cancel, retry, toggleExpanded, clearCompleted };
 }

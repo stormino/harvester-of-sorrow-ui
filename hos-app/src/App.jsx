@@ -59,7 +59,7 @@ export default function App() {
   const { toasts, addToast } = useToasts();
   const {
     tasks, connected, loading: downloadsLoading,
-    cancel, retry, toggleExpanded, clearCompleted, refresh: refreshDownloads,
+    cancel, retry, toggleExpanded, clearCompleted,
   } = useDownloads();
 
   const activeCount = tasks.filter(t => ['DOWNLOADING', 'EXTRACTING', 'MERGING', 'COPYING'].includes(t.status)).length;
