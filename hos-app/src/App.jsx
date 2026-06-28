@@ -50,25 +50,6 @@ function NavItem({ item, active, onClick, badge }) {
   );
 }
 
-function DiskWidget({ diskFreeGB }) {
-  const used = 1.32;
-  const total = 2.00;
-  const pct = (used / total) * 100;
-  return (
-    <div style={{ padding: '12px 11px', borderRadius: 9, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--text-muted)', marginBottom: 9 }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12 7 5h10l2 7"/><rect x="3" y="12" width="18" height="7" rx="2"/><path d="M7 15.5h.01"/></svg>
-        Disk free
-      </div>
-      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 17, fontWeight: 600, color: 'var(--text)' }}>{diskFreeGB.toFixed(1)} GB</div>
-      <div style={{ marginTop: 9, height: 5, borderRadius: 3, background: 'var(--border)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, borderRadius: 3, background: 'linear-gradient(90deg, var(--brand), color-mix(in srgb, var(--brand) 60%, var(--success)))' }} />
-      </div>
-      <div style={{ marginTop: 6, fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-dim)' }}>{used.toFixed(2)} TB / {total.toFixed(2)} TB used</div>
-    </div>
-  );
-}
-
 export default function App() {
   const { theme, toggleTheme } = useTheme();
   const { isMobile } = useWindowSize();
@@ -77,19 +58,17 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { toasts, addToast } = useToasts();
   const {
-    tasks, results, library, diskFreeGB,
-    cancelTask, retryTask, toggleExpanded, clearCompleted, addTask,
-    toggleLibraryMonitor, removeLibraryEntry,
+    tasks, connected, loading: downloadsLoading,
+    cancel, retry, toggleExpanded, clearCompleted, refresh: refreshDownloads,
   } = useDownloads();
 
-  const activeCount = tasks.filter(t => ['DOWNLOADING','EXTRACTING','MERGING','COPYING'].includes(t.status)).length;
+  const activeCount = tasks.filter(t => ['DOWNLOADING', 'EXTRACTING', 'MERGING', 'COPYING'].includes(t.status)).length;
 
   const navigate = (id) => { setRoute(id); setDrawerOpen(false); };
 
-  const handleDownload = (item) => {
-    addTask(item);
-    addToast(`Added "${item.title}" to queue`, 'success');
-    setRoute('downloads');
+  const handleQueued = () => {
+    addToast('Added to download queue', 'success');
+    navigate('downloads');
   };
 
   const showSidebar = !isMobile && sidebarOpen;
@@ -125,8 +104,12 @@ export default function App() {
 
         {/* Connection status */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', padding: '5px 10px', borderRadius: 7, background: 'var(--surface-2)', border: '1px solid var(--border)' }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 0 3px color-mix(in srgb, var(--success) 22%, transparent)', flexShrink: 0 }} />
-          connected
+          <span style={{
+            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+            background: connected ? 'var(--success)' : 'var(--error)',
+            boxShadow: connected ? '0 0 0 3px color-mix(in srgb, var(--success) 22%, transparent)' : 'none',
+          }} />
+          {connected ? 'connected' : 'offline'}
         </div>
 
         {/* Theme toggle */}
@@ -163,8 +146,6 @@ export default function App() {
                 badge={item.id === 'downloads' && activeCount > 0 ? activeCount : undefined}
               />
             ))}
-            <div style={{ flex: 1 }} />
-            <DiskWidget diskFreeGB={diskFreeGB} />
           </aside>
         )}
 
@@ -192,25 +173,24 @@ export default function App() {
                   badge={item.id === 'downloads' && activeCount > 0 ? activeCount : undefined}
                 />
               ))}
-              <div style={{ flex: 1 }} />
-              <DiskWidget diskFreeGB={diskFreeGB} />
             </div>
           </>
         )}
 
         {/* MAIN CONTENT */}
         <main style={{ flex: 1, minWidth: 0, overflowY: 'scroll', scrollbarGutter: 'stable', height: 'calc(100vh - 56px)', paddingBottom: isMobile ? 52 : 0 }}>
-          {route === 'search'    && <SearchScreen results={results} onDownload={handleDownload} />}
+          {route === 'search'    && <SearchScreen onQueued={handleQueued} />}
           {route === 'downloads' && (
             <DownloadsScreen
-              tasks={tasks} diskFreeGB={diskFreeGB}
-              onCancel={cancelTask} onRetry={retryTask}
+              tasks={tasks}
+              onCancel={cancel}
+              onRetry={retry}
               onToggleExpanded={toggleExpanded}
               onClearCompleted={clearCompleted}
               onAddToast={addToast}
             />
           )}
-          {route === 'library'   && <LibraryScreen library={library} onToggleMonitor={toggleLibraryMonitor} onRemove={removeLibraryEntry} />}
+          {route === 'library'   && <LibraryScreen />}
           {route === 'settings'  && <SettingsScreen />}
         </main>
       </div>
