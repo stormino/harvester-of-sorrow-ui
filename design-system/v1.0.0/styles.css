@@ -1,0 +1,9 @@
+/* ─────────────────────────────────────────────
+   Harvester of Sorrow (HOS) Design System — Root Entry
+   Import this one file to get all tokens.
+   ───────────────────────────────────────────── */
+
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+@import './tokens/animations.css';
