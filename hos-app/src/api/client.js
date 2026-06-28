@@ -35,16 +35,16 @@ export const cancelDownload  = (id)  => request('DELETE', `/downloads/${id}`);
 export const retryDownload   = (id)  => request('POST',   `/downloads/${id}/retry`);
 
 export const downloadVixSrcMovie = (tmdbId, languages, quality) =>
-  request('POST', '/download/movie', { tmdbId, languages, quality });
+  request('POST', '/download/movie', null, { tmdbId, languages, quality });
 
 export const downloadVixSrcTv = (tmdbId, season, episode, languages, quality) =>
-  request('POST', '/download/tv', { tmdbId, season, episode, languages, quality });
+  request('POST', '/download/tv', null, { tmdbId, season, episode, languages, quality });
 
 export const downloadRaiPlayMovie = (pathId, title, year) =>
-  request('POST', '/download/raiplay/movie', { pathId, title, year });
+  request('POST', '/download/raiplay/movie', null, { pathId, title, year });
 
 export const downloadRaiPlayTv = (pathId, title, season, episode, episodeName) =>
-  request('POST', '/download/raiplay/tv', { pathId, title, season, episode, episodeName });
+  request('POST', '/download/raiplay/tv', null, { pathId, title, season, episode, episodeName });
 
 // ── Library ──────────────────────────────────────────────────────────────────
 
