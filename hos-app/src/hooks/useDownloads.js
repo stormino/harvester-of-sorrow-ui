@@ -70,6 +70,7 @@ export function useDownloads() {
       es.onopen = () => {
         setConnected(true);
         clearInterval(pollTimer);
+        pollTimer = null;
       };
 
       es.onmessage = (e) => {
@@ -79,9 +80,12 @@ export function useDownloads() {
       es.onerror = () => {
         setConnected(false);
         es.close();
-        // Fall back to polling while SSE is down
-        pollTimer = setInterval(fetchAll, POLL_MS);
-        // Try to reconnect SSE after 5s
+        // Only start polling if not already polling
+        if (!pollTimer) {
+          pollTimer = setInterval(fetchAll, POLL_MS);
+        }
+        // Try to reconnect SSE after 5s (clear any pending reconnect first)
+        clearTimeout(reconnectTimer);
         reconnectTimer = setTimeout(connect, 5000);
       };
     };
